@@ -40,3 +40,37 @@ function kburnsvideo_delete_instance($id) {
     $DB->delete_records('kburnsvideo', ['id' => $kburnsvideo->id]);
     return true;
 }
+
+function kburnsvideo_view($kburnsvideo, $course, $cm, $context) {
+    $params = [
+        'context' => $context,
+        'objectid' => $kburnsvideo->id,
+    ];
+    $event = \mod_kburnsvideo\event\course_module_viewed::create($params);
+    $event->add_record_snapshot('course_modules', $cm);
+    $event->add_record_snapshot('kburnsvideo', $kburnsvideo);
+    $event->trigger();
+
+    $completion = new \completion_info($course);
+    $completion->set_module_viewed($cm);
+}
+
+function kburnsvideo_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
+    if ($context->contextlevel != CONTEXT_MODULE) {
+        return false;
+    }
+    require_course_login($course, true, $cm);
+    if ($filearea !== 'video') {
+        return false;
+    }
+    $itemid = array_shift($args);
+    $filename = array_pop($args);
+    $filepath = $args ? '/' . implode('/', $args) . '/' : '/';
+
+    $fs = get_file_storage();
+    $file = $fs->get_file($context->id, 'mod_kburnsvideo', $filearea, $itemid, $filepath, $filename);
+    if (!$file || $file->is_directory()) {
+        return false;
+    }
+    send_stored_file($file, null, 0, $forcedownload, $options);
+}
