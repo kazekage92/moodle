@@ -41,7 +41,7 @@ if ($file) {
 
 if (!empty($kburnsvideo->transcript)) {
     echo $OUTPUT->heading(get_string('transcript', 'kburnsvideo'), 3);
-    echo html_writer::tag('div', nl2br(format_text($kburnsvideo->transcript, FORMAT_PLAIN)), ['class' => 'kburnsvideo-transcript']);
+    echo html_writer::tag('div', format_text($kburnsvideo->transcript, FORMAT_PLAIN), ['class' => 'kburnsvideo-transcript']);
 }
 
 echo $OUTPUT->footer();
