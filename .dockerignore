@@ -1,0 +1,11 @@
+# Keep the build context small and safe.
+.git
+.github
+node_modules
+**/node_modules
+# The local dev config.php (moodle-docker). The image supplies its own
+# production config via deploy/railway/config.php.
+config.php
+# Editor/OS noise
+.DS_Store
+Thumbs.db
