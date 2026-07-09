@@ -16,9 +16,13 @@ COPY deploy/railway/config.php /var/www/html/config.php
 ENV MOODLE_DATAROOT=/var/moodledata
 RUN mkdir -p /var/moodledata && chown -R www-data:www-data /var/moodledata
 
-# Runs pending Moodle upgrades on each deploy, then starts Apache.
-COPY deploy/railway/entrypoint.sh /usr/local/bin/moodle-entrypoint.sh
-RUN chmod +x /usr/local/bin/moodle-entrypoint.sh
+# Hook our upgrade check into the base image's own startup sequence instead of
+# replacing it. The base entrypoint runs every *.sh in /docker-entrypoint.d/ first
+# (which sets APACHE_DOCUMENT_ROOT -> /var/www/html/public and finalizes Apache),
+# then starts Apache. Overriding ENTRYPOINT would skip all of that.
+COPY deploy/railway/entrypoint.sh /docker-entrypoint.d/50-moodle.sh
+RUN chmod +x /docker-entrypoint.d/50-moodle.sh
 
 EXPOSE 80
-ENTRYPOINT ["/usr/local/bin/moodle-entrypoint.sh"]
+# ENTRYPOINT / CMD intentionally left as the base image defaults
+# (moodle-docker-php-entrypoint -> apache2-foreground).
