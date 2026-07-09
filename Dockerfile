@@ -1,8 +1,15 @@
 # Production-ish image for Railway, built FROM your own Moodle fork.
 # Base is Moodle's official PHP+Apache image: PHP 8.3 with every extension
-# Moodle needs (pgsql, intl, gd, zip, soap, exif, opcache, ...) already installed
-# and Apache pre-configured with docroot /var/www/html.
-FROM moodlehq/moodle-php-apache:8.3
+# Moodle needs (pgsql, intl, gd, zip, soap, exif, opcache, ...) already installed.
+#
+# Pinned to a specific digest (NOT the mutable :8.3 tag) for reproducible builds.
+# The mutable tag was pulling a newer image on Railway that loaded two Apache MPMs
+# ("More than one MPM loaded") and crash-looped. This digest is a known-good build.
+FROM moodlehq/moodle-php-apache@sha256:946c42935f491ae3726cbee40a8de1209affb4926748a1da54764660ce3cfc5c
+
+# Belt-and-suspenders: mod_php requires exactly one MPM (prefork). Guarantee it
+# regardless of what the base image ships, so Apache never sees a duplicate MPM.
+RUN a2dismod mpm_event mpm_worker 2>/dev/null || true; a2enmod mpm_prefork 2>/dev/null || true
 
 # Copy your Moodle code into the webroot.
 # .dockerignore keeps out .git, node_modules and the local dev config.php.
